@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,8 +21,6 @@ public class UserDaoHibernateImpl implements UserDao {
 
     }
 
-
-    @Override
     public void createUsersTable() {
         Transaction transaction = null;
         try (Session session = Util.getSessionFactory().openSession()) {
@@ -34,7 +33,6 @@ public class UserDaoHibernateImpl implements UserDao {
         }
     }
 
-    @Override
     public void dropUsersTable() {
         Transaction transaction = null;
         try (Session session = Util.getSessionFactory().openSession()) {
@@ -47,11 +45,12 @@ public class UserDaoHibernateImpl implements UserDao {
         }
     }
 
-    @Override
     public void saveUser(String name, String lastName, byte age) {
         User user = new User(name, lastName, age);
         Transaction transaction = null;
-        try (Session session = Util.getSessionFactory().openSession()) {
+        Session session = null;
+        try {
+            session = Util.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             session.save(user);
             transaction.commit();
@@ -61,22 +60,35 @@ public class UserDaoHibernateImpl implements UserDao {
             }
             System.err.println(e);
         }
+        finally {
+            if (session != null) {
+                session.close();
+            }
+        }
     }
 
-    @Override
     public void removeUserById(long id) {
         Transaction transaction = null;
-        try (Session session = Util.getSessionFactory().openSession()) {
+        Session session = null;
+        try {
+            session = Util.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             User user = session.get(User.class, id);
             session.delete(user);
             session.getTransaction().commit();
         } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
             System.err.println(e);
+        }
+        finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
-    @Override
     public List<User> getAllUsers() {
         Transaction transaction = null;
         List<User> users = new ArrayList<>();
@@ -91,7 +103,6 @@ public class UserDaoHibernateImpl implements UserDao {
         return users;
     }
 
-    @Override
     public void cleanUsersTable() {
         Transaction transaction = null;
         try (Session session = Util.getSessionFactory().openSession()) {

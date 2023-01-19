@@ -21,8 +21,9 @@ public class Util {
     private static SessionFactory sessionFactory;
 
     public static Connection getConnection() throws SQLException {
-        Connection connection = null;
-        return connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+        connection.setAutoCommit(false);
+        return connection;
     }
 
     public static SessionFactory getSessionFactory() {
